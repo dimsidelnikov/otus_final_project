@@ -25,10 +25,19 @@ pipeline {
         }
         stage('Test') {
           steps {
-            sh 'python3 -m pytest --executor ${IP_SELENOID} \
-            --url ${URL_OPENCART} -n ${NUM_THREADS} \
-            --browser ${BROWSER} --bv ${BROWSER_VERSION}'
-            stash name: 'allure-results', includes: 'allure-results/*'
+            script {
+              try{
+                sh 'python3 -m pytest --executor ${IP_SELENOID} \
+                --url ${URL_OPENCART} -n ${NUM_THREADS} \
+                --browser ${BROWSER} --bv ${BROWSER_VERSION}'
+                stash name: 'allure-results', includes: 'allure-results/*'
+                currentBuild.result = 'SUCCESS'
+              } catch (err) {
+                  stash name: 'allure-results', includes: 'allure-results/*'
+                  currentBuild.result = 'FAILED'
+                  throw err
+              }
+            }
           }
         }
       }
